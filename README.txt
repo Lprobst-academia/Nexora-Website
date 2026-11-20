@@ -1,16 +1,16 @@
-NEXORA v4.4 — TRUE 3D LOGO + IPAD LOOK FIX
+NEXORA v4.5 — BUILD FIX + REMOVE JOYSTICK
 
-Replace these files in the same directory as your existing Store3D.tsx:
-- Store3D.tsx
-- style.css
-- nexora-mark.svg (new required asset)
+Replace the existing root-level Store3D.tsx and style.css with these files.
+Keep nexora-mark.svg in the SAME directory as Store3D.tsx.
 
-The NEXORA wordmark is now built from extruded vector geometry at runtime with Three.js.
-It is not a flat image or a logo printed on a screen. The logo has thickness, bevels,
-metallic materials, coloured lighting, and a slow floating/rotating animation. The
-separate ring remains behind it as an architectural accent.
+Fixes:
+- Imports useTexture from @react-three/drei (it was used but not imported).
+- Removes the undefined defaultLogo reference from the Store3D component signature.
+- Removes the visible virtual joystick and old D-pad.
+- iPad touch movement: drag in the LEFT area to walk.
+- iPad camera: drag in the RIGHT area to look around.
+- Keyboard movement remains WASD / arrows; E opens the nearby game.
 
-The iPad look area now covers the right-hand side of the showroom. Drag anywhere in
-that region to rotate the camera. The left-side joystick remains dedicated to movement.
-
-Important: keep nexora-mark.svg beside Store3D.tsx because Store3D imports it with ?raw.
+If GitHub Actions still fails, open Actions > failed run > build > expand
+'Build' and send the actual TypeScript/Vite error lines. The screenshot showing
+only the red failed check does not include the cause.

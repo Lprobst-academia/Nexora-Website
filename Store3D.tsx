@@ -1,5 +1,5 @@
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { PointerLockControls, Text } from '@react-three/drei'
+import { PointerLockControls, Text, useTexture } from '@react-three/drei'
 import { SVGLoader } from 'three/examples/jsm/loaders/SVGLoader.js'
 import logoSvg from './nexora-mark.svg?raw'
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
@@ -14,7 +14,6 @@ type Props = {
   theme: string
   onSelect: (game: Game) => void
   interactive?: boolean
-  logo?: string
 }
 type MoveInput = { forward: number; strafe: number }
 type LookInput = { x: number; y: number }
@@ -240,29 +239,58 @@ function Player({ onNear, onSelect, spots, moveInput, lookInput, touchMode }: {
 }
 
 function TouchControls({ moveInput, lookInput }: { moveInput: MutableRefObject<MoveInput>; lookInput: MutableRefObject<LookInput> }) {
-  const lastPoint = useRef<{ x: number; y: number } | null>(null)
-  const joystick = useRef<HTMLDivElement>(null)
-  const setMoveFromPoint = (event: ReactPointerEvent<HTMLDivElement>) => {
-    const rect = event.currentTarget.getBoundingClientRect()
-    const cx = rect.left + rect.width / 2, cy = rect.top + rect.height / 2
-    const dx = (event.clientX - cx) / (rect.width * .36)
-    const dy = (event.clientY - cy) / (rect.height * .36)
-    const length = Math.max(1, Math.hypot(dx, dy))
-    moveInput.current = { forward: THREE.MathUtils.clamp(-dy / length, -1, 1), strafe: THREE.MathUtils.clamp(dx / length, -1, 1) }
+  const moveLast = useRef<{ x: number; y: number } | null>(null)
+  const lookLast = useRef<{ x: number; y: number } | null>(null)
+
+  const startMove = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (event.pointerType === 'mouse') return
+    event.preventDefault()
+    moveLast.current = { x: event.clientX, y: event.clientY }
+    event.currentTarget.setPointerCapture(event.pointerId)
+    moveInput.current = { forward: 0, strafe: 0 }
   }
-  const startJoystick = (event: ReactPointerEvent<HTMLDivElement>) => { event.preventDefault(); event.currentTarget.setPointerCapture(event.pointerId); setMoveFromPoint(event) }
-  const moveJoystick = (event: ReactPointerEvent<HTMLDivElement>) => { if (event.currentTarget.hasPointerCapture(event.pointerId)) setMoveFromPoint(event) }
-  const stopJoystick = () => { moveInput.current = { forward: 0, strafe: 0 } }
-  const startLook = (event: ReactPointerEvent<HTMLDivElement>) => { if (event.pointerType === 'mouse') return; event.preventDefault(); lastPoint.current = { x: event.clientX, y: event.clientY }; event.currentTarget.setPointerCapture(event.pointerId) }
-  const moveLook = (event: ReactPointerEvent<HTMLDivElement>) => { if (!lastPoint.current || event.pointerType === 'mouse') return; lookInput.current.x += (event.clientX - lastPoint.current.x) * 1.15; lookInput.current.y += (event.clientY - lastPoint.current.y) * 1.15; lastPoint.current = { x: event.clientX, y: event.clientY } }
-  const endLook = () => { lastPoint.current = null }
+  const movePlayer = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (!moveLast.current || event.pointerType === 'mouse') return
+    const dx = event.clientX - moveLast.current.x
+    const dy = event.clientY - moveLast.current.y
+    // Swipe direction controls walking; speed is capped for predictable iPad movement.
+    const scale = 0.085
+    moveInput.current = {
+      forward: THREE.MathUtils.clamp(-dy * scale, -1, 1),
+      strafe: THREE.MathUtils.clamp(dx * scale, -1, 1),
+    }
+    moveLast.current = { x: event.clientX, y: event.clientY }
+  }
+  const stopMove = () => {
+    moveLast.current = null
+    moveInput.current = { forward: 0, strafe: 0 }
+  }
+
+  const startLook = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (event.pointerType === 'mouse') return
+    event.preventDefault()
+    lookLast.current = { x: event.clientX, y: event.clientY }
+    event.currentTarget.setPointerCapture(event.pointerId)
+  }
+  const moveLook = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (!lookLast.current || event.pointerType === 'mouse') return
+    lookInput.current.x += (event.clientX - lookLast.current.x) * 1.15
+    lookInput.current.y += (event.clientY - lookLast.current.y) * 1.15
+    lookLast.current = { x: event.clientX, y: event.clientY }
+  }
+  const endLook = () => { lookLast.current = null }
+
   return <div className="touch-controls" aria-label="Touch showroom controls">
-    <div className="touch-look-zone" onPointerDown={startLook} onPointerMove={moveLook} onPointerUp={endLook} onPointerCancel={endLook} onLostPointerCapture={endLook}><span>DRAG TO LOOK</span></div>
-    <div ref={joystick} className="touch-joystick" onPointerDown={startJoystick} onPointerMove={moveJoystick} onPointerUp={stopJoystick} onPointerCancel={stopJoystick} onLostPointerCapture={stopJoystick} role="application" aria-label="Virtual movement joystick"><div className="joystick-ring"><div className="joystick-knob"/></div><small>MOVE</small></div>
+    <div className="touch-move-zone" onPointerDown={startMove} onPointerMove={movePlayer} onPointerUp={stopMove} onPointerCancel={stopMove} onLostPointerCapture={stopMove}>
+      <span>DRAG TO MOVE</span>
+    </div>
+    <div className="touch-look-zone" onPointerDown={startLook} onPointerMove={moveLook} onPointerUp={endLook} onPointerCancel={endLook} onLostPointerCapture={endLook}>
+      <span>DRAG TO LOOK</span>
+    </div>
   </div>
 }
 
-export default function Store3D({ games, storeName, primary, theme, onSelect, interactive = true, logo = defaultLogo }: Props) {
+export default function Store3D({ games, storeName, primary, theme, onSelect, interactive = true }: Props) {
   const spots = useMemo(() => games.map((game, index) => ({ p: new THREE.Vector3(...positionFor(index, games.length)), g: game })), [games])
   const [near, setNear] = useState<Game | null>(null)
   const [touchMode, setTouchMode] = useState(false)
