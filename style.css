@@ -476,3 +476,16 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
   .touch-pad { z-index: 6; }
   .near-card { z-index: 8; }
 }
+
+/* v4.3 mobile movement: a dedicated analog joystick replaces tiny D-pad buttons. */
+.touch-joystick { display:none; }
+@media (pointer:coarse) {
+  .touch-joystick { display:flex; position:absolute; left:max(16px,env(safe-area-inset-left)); bottom:max(18px,env(safe-area-inset-bottom)); width:126px; height:150px; flex-direction:column; align-items:center; justify-content:center; gap:5px; z-index:7; pointer-events:auto; touch-action:none; user-select:none; -webkit-user-select:none; }
+  .joystick-ring { width:112px; height:112px; border-radius:50%; border:2px solid #a9cbb0; background:radial-gradient(circle,#ffffffde,#e7f1e8cc); box-shadow:0 8px 24px #17351f26,inset 0 0 0 8px #ffffff70; display:grid; place-items:center; touch-action:none; }
+  .joystick-knob { width:48px; height:48px; border-radius:50%; background:linear-gradient(145deg,#ffffff,#cfe3d2); border:1px solid #8bb99a; box-shadow:0 4px 12px #17351f35; pointer-events:none; }
+  .touch-joystick small { font:700 8px var(--mono); letter-spacing:1.5px; color:#426b4d; }
+  .touch-look-zone { right:12px !important; bottom:max(20px,env(safe-area-inset-bottom)) !important; width:min(32vw,170px) !important; height:112px !important; top:auto !important; left:auto !important; }
+  .touch-controls { pointer-events:none; }
+  .touch-look-zone,.touch-joystick { pointer-events:auto; }
+  .touch-pad { display:none !important; }
+}

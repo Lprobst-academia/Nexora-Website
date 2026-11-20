@@ -26,14 +26,35 @@ function positionFor(index: number, count: number): [number, number, number] {
 }
 
 function Floor({ primary }: { primary: string }) {
+  const wallTexture = useMemo(() => {
+    const canvas = document.createElement('canvas')
+    canvas.width = 512; canvas.height = 512
+    const ctx = canvas.getContext('2d')!
+    ctx.fillStyle = '#f4f7f2'; ctx.fillRect(0, 0, 512, 512)
+    for (let y = 0; y < 512; y += 64) {
+      ctx.fillStyle = y % 128 === 0 ? '#e8efe8' : '#eef3ed'; ctx.fillRect(0, y, 512, 2)
+    }
+    for (let x = 0; x < 512; x += 128) {
+      ctx.fillStyle = '#dce8dd'; ctx.fillRect(x, 0, 1, 512)
+      ctx.fillStyle = '#ffffff'; ctx.fillRect(x + 2, 0, 2, 512)
+    }
+    for (let i = 0; i < 1800; i++) {
+      const x = Math.random() * 512, y = Math.random() * 512
+      ctx.fillStyle = i % 2 ? 'rgba(35,80,48,.025)' : 'rgba(255,255,255,.22)'
+      ctx.fillRect(x, y, 1, 1)
+    }
+    const texture = new THREE.CanvasTexture(canvas); texture.wrapS = texture.wrapT = THREE.RepeatWrapping; texture.repeat.set(2, 1); texture.colorSpace = THREE.SRGBColorSpace
+    return texture
+  }, [])
   return <group>
     <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.08, 0]} receiveShadow>
       <planeGeometry args={[34, 34]} />
       <meshStandardMaterial color="#f4f8f4" roughness={0.92} />
     </mesh>
     <gridHelper args={[34, 34, '#b9d8c1', '#e2ece4']} position={[0, -0.065, 0]} />
-    {[-16, 16].map(x => <mesh key={`wx${x}`} position={[x, 3, 0]}><boxGeometry args={[.16, 6, 34]}/><meshStandardMaterial color="#fff"/></mesh>)}
-    {[-16, 16].map(z => <mesh key={`wz${z}`} position={[0, 3, z]}><boxGeometry args={[34, 6, .16]}/><meshStandardMaterial color="#fff"/></mesh>)}
+    {[-16, 16].map(x => <mesh key={`wx${x}`} position={[x, 3, 0]}><boxGeometry args={[.16, 6, 34]}/><meshStandardMaterial map={wallTexture} roughness={.82}/></mesh>)}
+    {[-16, 16].map(z => <mesh key={`wz${z}`} position={[0, 3, z]}><boxGeometry args={[34, 6, .16]}/><meshStandardMaterial map={wallTexture} roughness={.82}/></mesh>)}
+    {[-12,-8,-4,0,4,8,12].map(x => <mesh key={`panel-${x}`} position={[x,3, -15.88]}><boxGeometry args={[.045,5.5,.035]}/><meshStandardMaterial color="#c8d9ca" roughness={.7}/></mesh>)}
     <mesh position={[0, 6, 0]}><boxGeometry args={[32, .16, 32]}/><meshStandardMaterial color="#edf4ee"/></mesh>
     {[-12, -6, 0, 6, 12].map(x => <mesh key={`lx${x}`} position={[x, 5.91, 0]}><boxGeometry args={[.025, .02, 31]}/><meshBasicMaterial color={primary}/></mesh>)}
     {[-12, -6, 0, 6, 12].map(z => <mesh key={`lz${z}`} position={[0, 5.91, z]}><boxGeometry args={[31, .02, .025]}/><meshBasicMaterial color="#dce9de"/></mesh>)}
@@ -88,15 +109,19 @@ function GameDisplay({ game, position, primary, onSelect }: { game: Game; positi
 
 function Centrepiece({ logo, primary }: { logo: string; primary: string }) {
   const texture = useTexture(logo)
-  return <group position={[0, 3.25, -1.1]}>
-    <mesh rotation={[0, 0, 0]}>
-      <torusGeometry args={[2.05, .045, 12, 96]} />
-      <meshBasicMaterial color={primary} />
-    </mesh>
-    <mesh position={[0, 0, .02]}>
-      <planeGeometry args={[3.35, 1.16]} />
-      <meshBasicMaterial map={texture} transparent toneMapped={false} side={THREE.DoubleSide} depthWrite={false} />
-    </mesh>
+  const group = useRef<THREE.Group>(null)
+  useFrame((state, delta) => {
+    if (!group.current) return
+    group.current.rotation.y += delta * .12
+    group.current.position.y = 3.25 + Math.sin(state.clock.elapsedTime * .7) * .055
+  })
+  return <group ref={group} position={[0, 3.25, -1.1]}>
+    <mesh rotation={[0, 0, 0]}><torusGeometry args={[2.05, .075, 16, 128]} /><meshStandardMaterial color={primary} metalness={.72} roughness={.24} emissive={primary} emissiveIntensity={.16} /></mesh>
+    <mesh rotation={[0, 0, 0]}><torusGeometry args={[1.91, .018, 8, 128]} /><meshBasicMaterial color="#dff6e4" /></mesh>
+    <mesh position={[0, 0, -.09]}><boxGeometry args={[3.55, 1.34, .18, 4, 2, 2]} /><meshStandardMaterial color="#dfe9df" metalness={.55} roughness={.3} /></mesh>
+    <mesh position={[0, 0, .012]}><planeGeometry args={[3.28, 1.12]} /><meshBasicMaterial map={texture} transparent toneMapped={false} side={THREE.DoubleSide} depthWrite={false} /></mesh>
+    <mesh position={[0, 0, -.105]} rotation={[0, Math.PI, 0]}><planeGeometry args={[3.28, 1.12]} /><meshBasicMaterial map={texture} transparent toneMapped={false} side={THREE.DoubleSide} depthWrite={false} /></mesh>
+    <pointLight position={[0, 0, .5]} color={primary} intensity={1.1} distance={5} />
   </group>
 }
 
@@ -167,26 +192,24 @@ function Player({ onNear, onSelect, spots, moveInput, lookInput, touchMode }: {
 
 function TouchControls({ moveInput, lookInput }: { moveInput: MutableRefObject<MoveInput>; lookInput: MutableRefObject<LookInput> }) {
   const lastPoint = useRef<{ x: number; y: number } | null>(null)
-  const setMove = (forward: number, strafe: number) => { moveInput.current = { forward, strafe } }
-  const startLook = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (event.pointerType === 'mouse') return
-    lastPoint.current = { x: event.clientX, y: event.clientY }
-    event.currentTarget.setPointerCapture(event.pointerId)
+  const joystick = useRef<HTMLDivElement>(null)
+  const setMoveFromPoint = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const rect = event.currentTarget.getBoundingClientRect()
+    const cx = rect.left + rect.width / 2, cy = rect.top + rect.height / 2
+    const dx = (event.clientX - cx) / (rect.width * .36)
+    const dy = (event.clientY - cy) / (rect.height * .36)
+    const length = Math.max(1, Math.hypot(dx, dy))
+    moveInput.current = { forward: THREE.MathUtils.clamp(-dy / length, -1, 1), strafe: THREE.MathUtils.clamp(dx / length, -1, 1) }
   }
-  const moveLook = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (!lastPoint.current || event.pointerType === 'mouse') return
-    lookInput.current.x += event.clientX - lastPoint.current.x
-    lookInput.current.y += event.clientY - lastPoint.current.y
-    lastPoint.current = { x: event.clientX, y: event.clientY }
-  }
+  const startJoystick = (event: ReactPointerEvent<HTMLDivElement>) => { event.preventDefault(); event.currentTarget.setPointerCapture(event.pointerId); setMoveFromPoint(event) }
+  const moveJoystick = (event: ReactPointerEvent<HTMLDivElement>) => { if (event.currentTarget.hasPointerCapture(event.pointerId)) setMoveFromPoint(event) }
+  const stopJoystick = () => { moveInput.current = { forward: 0, strafe: 0 } }
+  const startLook = (event: ReactPointerEvent<HTMLDivElement>) => { if (event.pointerType === 'mouse') return; event.preventDefault(); lastPoint.current = { x: event.clientX, y: event.clientY }; event.currentTarget.setPointerCapture(event.pointerId) }
+  const moveLook = (event: ReactPointerEvent<HTMLDivElement>) => { if (!lastPoint.current || event.pointerType === 'mouse') return; lookInput.current.x += event.clientX - lastPoint.current.x; lookInput.current.y += event.clientY - lastPoint.current.y; lastPoint.current = { x: event.clientX, y: event.clientY } }
   const endLook = () => { lastPoint.current = null }
-  const hold = (forward: number, strafe: number) => ({
-    onPointerDown: (event: ReactPointerEvent<HTMLButtonElement>) => { event.preventDefault(); event.currentTarget.setPointerCapture(event.pointerId); setMove(forward, strafe) },
-    onPointerUp: () => setMove(0, 0), onPointerCancel: () => setMove(0, 0), onLostPointerCapture: () => setMove(0, 0),
-  })
   return <div className="touch-controls" aria-label="Touch showroom controls">
     <div className="touch-look-zone" onPointerDown={startLook} onPointerMove={moveLook} onPointerUp={endLook} onPointerCancel={endLook}><span>DRAG TO LOOK</span></div>
-    <div className="touch-pad"><button type="button" aria-label="Move forward" {...hold(1, 0)}>▲</button><div><button type="button" aria-label="Move left" {...hold(0, -1)}>◀</button><button type="button" aria-label="Move backward" {...hold(-1, 0)}>▼</button><button type="button" aria-label="Move right" {...hold(0, 1)}>▶</button></div></div>
+    <div ref={joystick} className="touch-joystick" onPointerDown={startJoystick} onPointerMove={moveJoystick} onPointerUp={stopJoystick} onPointerCancel={stopJoystick} onLostPointerCapture={stopJoystick} role="application" aria-label="Virtual movement joystick"><div className="joystick-ring"><div className="joystick-knob"/></div><small>MOVE</small></div>
   </div>
 }
 
