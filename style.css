@@ -336,3 +336,66 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .checkout-total { color: #26382b; }
 .demo-bottom { color: #617366; }
 .demo-bottom .text-btn { color: #287447; }
+
+/* Nexora v4: calmer showroom motion, centrepiece, personal library and editor uploads */
+.store-canvas canvas { outline: none; }
+.game-plaque, .showroom-sign { user-select: none; }
+.store-top-right { gap: 14px; }
+.owned-toggle { pointer-events: auto; display: inline-flex; align-items: center; gap: 8px; border: 1px solid #d3e4d7; border-radius: 999px; background: #fff; color: #245b39; padding: 9px 13px; font: 800 9px var(--mono); letter-spacing: .7px; box-shadow: 0 4px 14px #18351d12; }
+.owned-toggle span { display: grid; place-items: center; min-width: 18px; height: 18px; border-radius: 50%; background: #e5f2e8; color: #17683e; }
+.owned-backdrop { position: fixed; inset: 0; z-index: 12000; display: flex; justify-content: flex-end; background: #10211666; backdrop-filter: blur(4px); }
+.owned-drawer { width: min(390px, 92vw); height: 100%; padding: 26px; background: #fff; color: #183323; box-shadow: -18px 0 60px #102c1b2b; display: flex; flex-direction: column; gap: 22px; }
+.owned-drawer header { display: flex; align-items: flex-start; justify-content: space-between; border-bottom: 1px solid #e3ece5; padding-bottom: 18px; }
+.owned-drawer h2 { margin: 7px 0 0; font-size: 27px; letter-spacing: -1px; }
+.owned-drawer h2 span { color: #238653; font-size: 16px; }
+.owned-list { display: grid; gap: 10px; overflow: auto; }
+.owned-item { display: flex; align-items: center; gap: 12px; padding: 10px; border: 1px solid #e4ece5; border-radius: 12px; background: #fbfdfb; }
+.owned-item img { width: 58px; height: 48px; object-fit: cover; border-radius: 7px; }
+.owned-item div { display: grid; gap: 4px; flex: 1; min-width: 0; }
+.owned-item b { font-size: 12px; }
+.owned-item small { color: #718075; font-size: 10px; }
+.owned-check { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: #e2f2e6; color: #197143; font-weight: 900; }
+.owned-empty { margin: auto 0; text-align: center; color: #6b7d70; }
+.owned-empty svg { color: #238653; }
+.owned-empty h3 { color: #183323; }
+.owned-empty p { font-size: 13px; line-height: 1.6; }
+.nexora-hero-logo { width: 145%; height: 82%; object-fit: contain; position: relative; z-index: 1; mix-blend-mode: screen; border-radius: 50%; }
+.visual-core { overflow: visible; }
+.builder-logo-preview { width: 48px; height: 48px; object-fit: contain; border: 1px solid #d9e7dc; border-radius: 9px; background: #08111a; }
+.visually-hidden { position: absolute !important; width: 1px !important; height: 1px !important; padding: 0 !important; margin: -1px !important; overflow: hidden !important; clip: rect(0,0,0,0) !important; white-space: nowrap !important; border: 0 !important; }
+.cover-upload-row { display: flex; align-items: center; gap: 12px; margin: -2px 0 16px; }
+.cover-upload-row img { width: 76px; height: 48px; object-fit: cover; border-radius: 7px; border: 1px solid #dce9df; }
+.upload-message { color: #287447; font-size: 11px; line-height: 1.5; background: #edf7ef; border-radius: 8px; padding: 10px 12px; }
+.demo-feedback { position: absolute; left: 0; right: 0; bottom: 18px; text-align: center; color: #287447; font: 800 10px var(--mono); letter-spacing: 1px; }
+.target-grid { position: absolute; inset: 70px 12% 55px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; align-items: center; }
+.target-grid button { height: 64px; border: 1px solid #c9dfcf; border-radius: 12px; background: #fff; color: #9ab4a0; font-size: 28px; }
+.target-grid button.target-active { background: #e5f4e9; color: #16834a; border: 2px solid #238653; box-shadow: 0 0 0 5px #23865320; }
+.resource-game, .signal-game, .path-game, .tap-game { position: absolute; inset: 75px 15px 48px; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 22px; text-align: center; }
+.resource-game > b, .path-game p { color: #1c5632; font: 800 12px var(--mono); letter-spacing: 1px; }
+.resource-game > div, .signal-game > div, .path-game > div { display: flex; gap: 12px; }
+.resource-game button, .signal-game button, .path-game button { min-width: 76px; min-height: 76px; border: 1px solid #d4e5d8; border-radius: 14px; background: #fff; color: #1e5734; font-size: 26px; box-shadow: 0 6px 20px #17351f12; }
+.resource-game button small { display: block; font: 800 8px var(--mono); }
+.signal-game > strong { font-size: 54px; color: #238653; }
+.build-grid { position: absolute; inset: 70px 22% 55px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.build-grid button { border: 1px solid #c9dfcf; border-radius: 9px; background: #fff; color: #238653; font-size: 24px; }
+.build-grid button.placed { background: #dff1e4; color: #17683e; }
+.tap-game .boost-meter { width: min(340px, 80%); height: 12px; background: #e3ece5; border-radius: 99px; overflow: hidden; }
+.tap-game .boost-meter span { display: block; height: 100%; background: #238653; transition: width .12s; }
+.tap-game button { min-width: 180px; min-height: 65px; border: 0; border-radius: 14px; background: #238653; color: #fff; font: 900 15px var(--mono); letter-spacing: 1px; box-shadow: 0 8px 24px #23865340; }
+.game-specific-demo .arcade-screen { background: radial-gradient(ellipse at 50% 48%, #f2faf3, #e0eee3 72%); border-color: #cbded0; }
+.game-specific-demo .arcade-stats { color: #526c59; }
+.game-specific-demo .arcade-stats b { color: #17683e; }
+.game-specific-demo .arcade-start { background: #f5faf6eF; }
+.game-specific-demo .arcade-start h3 { color: #1d5030; }
+.game-specific-demo .arcade-start p { color: #63786a; }
+.game-specific-demo .demo-feedback { color: #17683e; }
+@media (max-width: 760px) {
+  .owned-toggle { padding: 8px 9px; font-size: 8px; gap: 5px; }
+  .store-top-right { gap: 7px; }
+  .owned-drawer { padding: 20px; }
+  .nexora-hero-logo { width: 155%; height: 80%; }
+  .resource-game button, .signal-game button, .path-game button { min-width: 58px; min-height: 58px; }
+  .target-grid { inset-inline: 8%; }
+  .build-grid { inset-inline: 18%; }
+  .demo-feedback { bottom: 12px; font-size: 8px; }
+}

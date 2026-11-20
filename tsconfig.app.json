@@ -6,5 +6,5 @@
     "allowImportingTsExtensions": true, "verbatimModuleSyntax": true, "moduleDetection": "force",
     "noEmit": true, "jsx": "react-jsx", "strict": true, "noUnusedLocals": false, "noUnusedParameters": false
   },
-  "include": ["./*.ts", "./*.tsx"]
+  "include": ["App.tsx", "Dashboard.tsx", "Overlays.tsx", "Store3D.tsx", "data.ts", "main.tsx", "vite-env.d.ts"]
 }
