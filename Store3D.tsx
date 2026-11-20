@@ -1,10 +1,11 @@
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { PointerLockControls, Text, useTexture } from '@react-three/drei'
+import { PointerLockControls, Text } from '@react-three/drei'
+import { SVGLoader } from 'three/examples/jsm/loaders/SVGLoader.js'
+import logoSvg from './nexora-mark.svg?raw'
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import type { MutableRefObject, PointerEvent as ReactPointerEvent } from 'react'
 import * as THREE from 'three'
 import type { Game } from './data'
-import defaultLogo from './nexora-logo.png'
 
 type Props = {
   games: Game[]
@@ -107,21 +108,69 @@ function GameDisplay({ game, position, primary, onSelect }: { game: Game; positi
   </group>
 }
 
-function Centrepiece({ logo, primary }: { logo: string; primary: string }) {
-  const texture = useTexture(logo)
+function Centrepiece({ primary }: { primary: string }) {
   const group = useRef<THREE.Group>(null)
+  const logoMeshes = useMemo(() => {
+    const parsed = new SVGLoader().parse(logoSvg)
+    const geometries = parsed.paths.flatMap((path) => SVGLoader.createShapes(path).map((shape) => {
+      const geometry = new THREE.ExtrudeGeometry(shape, {
+        depth: 24,
+        bevelEnabled: true,
+        bevelSegments: 3,
+        steps: 1,
+        bevelSize: 2.2,
+        bevelThickness: 2.2,
+        curveSegments: 10,
+      })
+      geometry.scale(0.00235, -0.00235, 0.00235)
+      geometry.computeBoundingBox()
+      return geometry
+    }))
+    // Centre every letter/component together so the original wordmark spacing is preserved.
+    const bounds = new THREE.Box3()
+    geometries.forEach((geometry) => {
+      geometry.computeBoundingBox()
+      if (geometry.boundingBox) bounds.union(geometry.boundingBox)
+    })
+    const center = bounds.getCenter(new THREE.Vector3())
+    return geometries.map((geometry) => {
+      geometry.translate(-center.x, -center.y, -center.z)
+      geometry.computeBoundingBox()
+      geometry.computeVertexNormals()
+      const box = geometry.boundingBox
+      const hue = box ? THREE.MathUtils.mapLinear(box.min.x, -2.4, 2.4, 0.77, 0.54) : 0.65
+      const material = new THREE.MeshPhysicalMaterial({
+        color: new THREE.Color().setHSL(hue, 0.72, 0.68),
+        metalness: 0.48,
+        roughness: 0.2,
+        clearcoat: 1,
+        clearcoatRoughness: 0.14,
+        emissive: new THREE.Color().setHSL(hue, 0.8, 0.16),
+        emissiveIntensity: 0.22,
+        side: THREE.DoubleSide,
+      })
+      return new THREE.Mesh(geometry, material)
+    })
+  }, [])
+
   useFrame((state, delta) => {
     if (!group.current) return
-    group.current.rotation.y += delta * .12
-    group.current.position.y = 3.25 + Math.sin(state.clock.elapsedTime * .7) * .055
+    group.current.rotation.y += delta * 0.10
+    group.current.position.y = 3.35 + Math.sin(state.clock.elapsedTime * 0.65) * 0.045
   })
-  return <group ref={group} position={[0, 3.25, -1.1]}>
-    <mesh rotation={[0, 0, 0]}><torusGeometry args={[2.05, .075, 16, 128]} /><meshStandardMaterial color={primary} metalness={.72} roughness={.24} emissive={primary} emissiveIntensity={.16} /></mesh>
-    <mesh rotation={[0, 0, 0]}><torusGeometry args={[1.91, .018, 8, 128]} /><meshBasicMaterial color="#dff6e4" /></mesh>
-    <mesh position={[0, 0, -.09]}><boxGeometry args={[3.55, 1.34, .18, 4, 2, 2]} /><meshStandardMaterial color="#dfe9df" metalness={.55} roughness={.3} /></mesh>
-    <mesh position={[0, 0, .012]}><planeGeometry args={[3.28, 1.12]} /><meshBasicMaterial map={texture} transparent toneMapped={false} side={THREE.DoubleSide} depthWrite={false} /></mesh>
-    <mesh position={[0, 0, -.105]} rotation={[0, Math.PI, 0]}><planeGeometry args={[3.28, 1.12]} /><meshBasicMaterial map={texture} transparent toneMapped={false} side={THREE.DoubleSide} depthWrite={false} /></mesh>
-    <pointLight position={[0, 0, .5]} color={primary} intensity={1.1} distance={5} />
+
+  return <group ref={group} position={[0, 3.35, -1.1]}>
+    {/* The ring is a separate architectural accent; the NEXORA wordmark itself is extruded 3D geometry. */}
+    <mesh rotation={[0, 0, 0]} position={[0, 0, -0.16]}>
+      <torusGeometry args={[2.05, 0.045, 16, 128]} />
+      <meshStandardMaterial color={primary} metalness={0.85} roughness={0.22} emissive={primary} emissiveIntensity={0.12} />
+    </mesh>
+    <group position={[0, 0, 0.02]} scale={[0.92, 0.92, 1]}>
+      {logoMeshes.map((mesh, index) => <primitive key={index} object={mesh} />)}
+    </group>
+    <pointLight position={[0, 0, 0.8]} color={primary} intensity={1.2} distance={6} />
+    <pointLight position={[-2, 0.4, -0.5]} color="#9c72ff" intensity={0.65} distance={4} />
+    <pointLight position={[2, -0.3, -0.5]} color="#55bfff" intensity={0.65} distance={4} />
   </group>
 }
 
@@ -161,8 +210,8 @@ function Player({ onNear, onSelect, spots, moveInput, lookInput, touchMode }: {
   useFrame((_, delta) => {
     const dt = Math.min(delta, .035)
     if (touchMode) {
-      camera.rotation.y -= lookInput.current.x * .0021
-      camera.rotation.x = THREE.MathUtils.clamp(camera.rotation.x - lookInput.current.y * .0021, -1.05, 1.05)
+      camera.rotation.y -= lookInput.current.x * .0024
+      camera.rotation.x = THREE.MathUtils.clamp(camera.rotation.x - lookInput.current.y * .0024, -1.05, 1.05)
       lookInput.current.x = 0
       lookInput.current.y = 0
     }
@@ -205,10 +254,10 @@ function TouchControls({ moveInput, lookInput }: { moveInput: MutableRefObject<M
   const moveJoystick = (event: ReactPointerEvent<HTMLDivElement>) => { if (event.currentTarget.hasPointerCapture(event.pointerId)) setMoveFromPoint(event) }
   const stopJoystick = () => { moveInput.current = { forward: 0, strafe: 0 } }
   const startLook = (event: ReactPointerEvent<HTMLDivElement>) => { if (event.pointerType === 'mouse') return; event.preventDefault(); lastPoint.current = { x: event.clientX, y: event.clientY }; event.currentTarget.setPointerCapture(event.pointerId) }
-  const moveLook = (event: ReactPointerEvent<HTMLDivElement>) => { if (!lastPoint.current || event.pointerType === 'mouse') return; lookInput.current.x += event.clientX - lastPoint.current.x; lookInput.current.y += event.clientY - lastPoint.current.y; lastPoint.current = { x: event.clientX, y: event.clientY } }
+  const moveLook = (event: ReactPointerEvent<HTMLDivElement>) => { if (!lastPoint.current || event.pointerType === 'mouse') return; lookInput.current.x += (event.clientX - lastPoint.current.x) * 1.15; lookInput.current.y += (event.clientY - lastPoint.current.y) * 1.15; lastPoint.current = { x: event.clientX, y: event.clientY } }
   const endLook = () => { lastPoint.current = null }
   return <div className="touch-controls" aria-label="Touch showroom controls">
-    <div className="touch-look-zone" onPointerDown={startLook} onPointerMove={moveLook} onPointerUp={endLook} onPointerCancel={endLook}><span>DRAG TO LOOK</span></div>
+    <div className="touch-look-zone" onPointerDown={startLook} onPointerMove={moveLook} onPointerUp={endLook} onPointerCancel={endLook} onLostPointerCapture={endLook}><span>DRAG TO LOOK</span></div>
     <div ref={joystick} className="touch-joystick" onPointerDown={startJoystick} onPointerMove={moveJoystick} onPointerUp={stopJoystick} onPointerCancel={stopJoystick} onLostPointerCapture={stopJoystick} role="application" aria-label="Virtual movement joystick"><div className="joystick-ring"><div className="joystick-knob"/></div><small>MOVE</small></div>
   </div>
 }
@@ -235,7 +284,7 @@ export default function Store3D({ games, storeName, primary, theme, onSelect, in
       <pointLight position={[0, 4, 0]} color={primary} intensity={.8} distance={18} />
       <Suspense fallback={null}>
         <Floor primary={primary} />
-        <Centrepiece logo={logo} primary={primary} />
+        <Centrepiece primary={primary} />
         <group position={[0, 0, -13]}>
           <Text position={[0, 4.3, 0]} fontSize={.42} color="#1b3b28" anchorX="center" anchorY="middle" fontWeight="bold">{storeName || 'YOUR GAME STORE'}</Text>
           <Text position={[0, 3.85, 0]} fontSize={.14} color="#668071" anchorX="center" anchorY="middle" letterSpacing={.12}>DISCOVER YOUR NEXT WORLD</Text>

@@ -1,14 +1,16 @@
-NEXORA v4.3 showroom improvements
+NEXORA v4.4 — TRUE 3D LOGO + IPAD LOOK FIX
 
-Replace these two files in the ROOT of your existing GitHub repository:
+Replace these files in the same directory as your existing Store3D.tsx:
 - Store3D.tsx
 - style.css
+- nexora-mark.svg (new required asset)
 
-Do not put them in src/ or components/. This is the flat-root project layout.
-Keep your existing App.tsx, package.json, vite.config.ts, logo asset and .github/workflows/deploy.yml.
+The NEXORA wordmark is now built from extruded vector geometry at runtime with Three.js.
+It is not a flat image or a logo printed on a screen. The logo has thickness, bevels,
+metallic materials, coloured lighting, and a slow floating/rotating animation. The
+separate ring remains behind it as an architectural accent.
 
-Changes:
-- Centre logo now sits on a metallic 3D backing, with a raised metallic green ring and slow subtle rotation/bobbing. Front and rear faces both show the logo.
-- Showroom walls now have a soft architectural panel texture and subtle vertical detailing.
-- Mobile movement now uses a large virtual analog joystick on the lower left. Drag in the lower-right pad to look around. Release the joystick to stop.
-- Desktop WASD/mouse/E controls remain in place.
+The iPad look area now covers the right-hand side of the showroom. Drag anywhere in
+that region to rotate the camera. The left-side joystick remains dedicated to movement.
+
+Important: keep nexora-mark.svg beside Store3D.tsx because Store3D imports it with ?raw.
