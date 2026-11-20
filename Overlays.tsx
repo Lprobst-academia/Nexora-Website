@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { ArrowLeft, Check, ChevronRight, CreditCard, Gamepad2, Play, ShoppingBag, X, Zap } from 'lucide-react'
-import type { Game } from '../data'
-import { money } from '../data'
+import type { Game } from './data'
+import { money } from './data'
 
 export function GameModal({game,onClose,onBuy,onDemo}:{game:Game;onClose:()=>void;onBuy:()=>void;onDemo:()=>void}) {
   const [tab,setTab]=useState<'overview'|'media'>('overview')

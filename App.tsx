@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 import { ArrowRight, ChevronRight, Compass, Gamepad2, Mouse, ShieldCheck, Sparkles, Volume2 } from 'lucide-react'
 import { initialGames, type Game } from './data'
-import Store3D from './components/Store3D'
-import Dashboard from './components/Dashboard'
-import { Checkout, DemoGame, GameModal } from './components/Overlays'
+import Store3D from './Store3D'
+import Dashboard from './Dashboard'
+import { Checkout, DemoGame, GameModal } from './Overlays'
 
 type SavedStore = {
   games: Game[]

@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { ArrowLeft, Eye, Gamepad2, LayoutGrid, Palette, Plus, Store, Trash2, WandSparkles } from 'lucide-react'
-import type { Game } from '../data'
+import type { Game } from './data'
 import Store3D from './Store3D'
-import { money } from '../data'
+import { money } from './data'
 
 type Props={games:Game[];setGames:(g:Game[])=>void;storeName:string;setStoreName:(s:string)=>void;primary:string;setPrimary:(s:string)=>void;theme:string;setTheme:(s:string)=>void;onBack:()=>void}
 export default function Dashboard(p:Props) {

@@ -3,7 +3,7 @@ import { Float, Html, PointerLockControls } from '@react-three/drei'
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import type { MutableRefObject, PointerEvent as ReactPointerEvent } from 'react'
 import * as THREE from 'three'
-import type { Game } from '../data'
+import type { Game } from './data'
 
 type Props = {
   games: Game[]
