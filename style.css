@@ -399,3 +399,32 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
   .build-grid { inset-inline: 18%; }
   .demo-feedback { bottom: 12px; font-size: 8px; }
 }
+
+/* Version 4.1 — playable demo presentation */
+.demo-overlay { z-index: 40; padding: clamp(8px, 2vw, 24px); overflow-y: auto; }
+.immersive-demo { width: min(1040px, 98vw); max-height: min(94vh, 900px); overflow-y: auto; padding: clamp(14px, 2vw, 24px); border: 1px solid #b9d9c2; border-radius: 18px; background: #fbfefb; color: #17251c; box-shadow: 0 28px 100px #071b1080; }
+.immersive-demo .demo-top { position: sticky; top: -1px; z-index: 3; padding: 4px 0 12px; background: #fbfefb; border-bottom: 1px solid #e2ece4; }
+.immersive-demo .demo-top h2 { color: #17251c; font-size: clamp(20px, 3vw, 29px); letter-spacing: -.8px; margin: 5px 0 0; }
+.demo-instructions { display: grid; grid-template-columns: 1fr 1.4fr; gap: 12px; padding: 14px 0; }
+.demo-instructions>div { min-width: 0; padding: 12px 14px; background: #f0f7f1; border: 1px solid #e0ece2; border-radius: 10px; }
+.demo-instructions b { display: block; color: #238653; font: 800 9px var(--mono); letter-spacing: 1px; margin-bottom: 6px; }
+.demo-instructions p { margin: 0; color: #405448; font-size: 12px; line-height: 1.55; }
+.demo-instructions small { display: block; color: #718075; font-size: 10px; margin-top: 7px; }
+.immersive-stage { height: clamp(270px, 51vh, 540px); min-height: 260px; position: relative; overflow: hidden; border-radius: 12px; background: #0a1720; border: 1px solid #294a3b; }
+.immersive-stage canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+.demo-start-cover,.demo-end-cover { position: absolute; inset: 0; z-index: 2; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; text-align: center; background: #071b14d9; backdrop-filter: blur(5px); }
+.demo-start-cover h3,.demo-end-cover h3 { margin: 10px 0 5px; color: #fff; font-size: clamp(22px, 4vw, 34px); }
+.demo-start-cover p,.demo-end-cover p { max-width: 440px; margin: 0 0 18px; color: #d0e0d5; font-size: 13px; line-height: 1.6; }
+.demo-hud-row { display: flex; align-items: center; gap: 20px; padding: 12px 2px 5px; color: #203d2b; font: 11px var(--mono); }
+.demo-hud-row b { color: #238653; font-size: 9px; margin-right: 5px; }
+.demo-live-status { margin-left: auto; color: #68796d; font: 10px system-ui; text-align: right; }
+.demo-touch-pad { display: none; gap: 8px; justify-content: center; padding: 9px 0 2px; }
+.demo-touch-pad button { min-width: 42px; height: 38px; border: 1px solid #c9dfce; border-radius: 8px; background: #f0f7f1; color: #17683e; font-weight: 800; touch-action: none; }
+.demo-touch-pad .touch-action { padding: 0 12px; background: #238653; color: #fff; }
+.kingdom-actions { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; padding: 10px 0 2px; }
+.kingdom-actions button { padding: 10px 8px; border: 1px solid #cfe1d2; border-radius: 9px; background: #f0f7f1; color: #1d5e39; font: 700 10px var(--mono); }
+.kingdom-actions small { display: block; margin-top: 4px; color: #68796d; font: 9px system-ui; }
+.immersive-demo .demo-bottom { gap: 12px; border-top: 1px solid #e2ece4; margin-top: 12px; padding-top: 12px; color: #65776a; font: 10px system-ui; }
+.immersive-demo .demo-bottom .text-btn { color: #238653; }
+@media (pointer:coarse), (max-width:760px) { .demo-touch-pad { display: flex; } .immersive-demo { max-height: 96dvh; } .immersive-stage { height: clamp(250px, 43vh, 390px); } .demo-instructions { grid-template-columns: 1fr; gap: 7px; padding: 9px 0; } .demo-instructions>div { padding: 9px 11px; } .demo-instructions p { font-size: 11px; } .demo-hud-row { gap: 10px; flex-wrap: wrap; font-size: 9px; } .demo-live-status { width: 100%; text-align: left; margin: 0; } .kingdom-actions { grid-template-columns: 1fr 1fr; } }
+@media (max-width:420px) { .immersive-demo { padding: 11px; border-radius: 12px; } .demo-top .eyebrow { font-size: 7px; } .immersive-stage { min-height: 235px; } .demo-touch-pad button { min-width: 36px; } }

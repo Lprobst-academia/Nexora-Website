@@ -90,7 +90,7 @@ function Centrepiece({ logo, primary }: { logo: string; primary: string }) {
     </mesh>
     <mesh position={[0, 0, .02]}>
       <planeGeometry args={[3.35, 1.16]} />
-      <meshBasicMaterial map={texture} transparent toneMapped={false} />
+      <meshBasicMaterial map={texture} transparent toneMapped={false} side={THREE.DoubleSide} depthWrite={false} />
     </mesh>
   </group>
 }
@@ -220,7 +220,7 @@ export default function Store3D({ games, storeName, primary, theme, onSelect, in
       </>}
     </Canvas>
     {interactive && <>
-      <div className="interaction-hud">{near ? <div className="near-card"><span className="keycap">{touchMode ? 'TAP' : 'E'}</span><span>{touchMode ? 'TAP TO VIEW' : 'PRESS E TO VIEW'} <b>{near.title}</b></span><button onClick={() => onSelect(near)} type="button">OPEN ↗</button></div> : !touchMode ? <div className="aim-dot" /> : null}</div>
+      <div className="interaction-hud">{near ? <div className="near-card"><span className="keycap">{touchMode ? 'TAP' : 'E'}</span><span>{touchMode ? 'TAP TO OPEN' : 'PRESS E TO OPEN'} <b>{near.title}</b></span><button onClick={() => onSelect(near)} type="button">OPEN ↗</button></div> : !touchMode ? <div className="aim-dot" /> : null}</div>
       {touchMode && <TouchControls moveInput={moveInput} lookInput={lookInput} />}
     </>}
   </div>
