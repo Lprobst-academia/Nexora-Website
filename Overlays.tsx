@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { MouseEvent } from 'react'
-import { ArrowLeft, Check, ChevronRight, CreditCard, Gamepad2, Play, ShoppingBag, X, Zap } from 'lucide-react'
+import { ArrowLeft, Check, ChevronRight, CreditCard, Gamepad2, Maximize2, Minimize2, Play, ShoppingBag, X, Zap } from 'lucide-react'
 import type { Game } from './data'
 import { money } from './data'
 
@@ -105,10 +105,28 @@ function collides(board:number[][],piece:number[][],px:number,py:number){return 
 export function DemoGame({ game, onClose }: { game: Game; onClose: () => void }) {
   const profile = profiles[game.id] ?? fallbackProfile
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const demoShellRef = useRef<HTMLElement>(null)
   const engineRef = useRef<Engine>(makeEngine(profile.kind))
   const [started,setStarted] = useState(false)
+  const [fullscreen,setFullscreen] = useState(false)
   const [hud,setHud] = useState({score:0,time:60,status:'Ready to begin',over:false,won:false})
   const engine = engineRef.current
+  const toggleFullscreen = async () => {
+    if (fullscreen) {
+      if (document.fullscreenElement) { try { await document.exitFullscreen() } catch { /* CSS fullscreen remains available */ } }
+      setFullscreen(false)
+      return
+    }
+    setFullscreen(true)
+    try { await demoShellRef.current?.requestFullscreen?.() } catch { /* iPad Safari uses the CSS fullscreen fallback */ }
+  }
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') setFullscreen(false) }
+    const onFullscreenChange = () => { if (!document.fullscreenElement) setFullscreen(false) }
+    window.addEventListener('keydown', onKey)
+    document.addEventListener('fullscreenchange', onFullscreenChange)
+    return () => { window.removeEventListener('keydown', onKey); document.removeEventListener('fullscreenchange', onFullscreenChange) }
+  }, [])
   const reset = () => { engineRef.current=makeEngine(profile.kind); engineRef.current.started=performance.now(); engineRef.current.last=performance.now(); setHud({score:0,time:60,status:'In progress',over:false,won:false}); setStarted(true) }
   useEffect(()=>{
     const c=canvasRef.current; if(!c)return
@@ -169,8 +187,8 @@ export function DemoGame({ game, onClose }: { game: Game; onClose: () => void })
   const kingdomAction=(kind:'wood'|'stone'|'food'|'home')=>{const e=engineRef.current;if(!started||e.over)return;if(kind==='wood'){e.wood+=4;e.food=Math.max(0,e.food-1);e.message='Your foresters bring back timber.'}if(kind==='stone'){e.stone+=3;e.food=Math.max(0,e.food-1);e.message='The quarry yields building stone.'}if(kind==='food'){e.food+=5;e.message='Fresh harvest stored for winter.'}if(kind==='home'){if(e.wood>=8&&e.stone>=5&&e.food>=2){e.wood-=8;e.stone-=5;e.food-=2;e.homes++;e.message='A new home is ready for settlers.'}else e.message='Need 8 wood, 5 stone and 2 food to build.'}e.score=e.homes*300+e.wood*5+e.stone*5+e.food*2;setHud(h=>({...h,score:e.score,status:e.message}))}
   const touchKey=(code:string,down:boolean)=>{if(down)engine.keys.add(code);else engine.keys.delete(code)}
   const canvasClick=(ev:MouseEvent<HTMLCanvasElement>)=>{if(profile.kind!=='kingdoms'||!started)return;const rect=ev.currentTarget.getBoundingClientRect();const x=(ev.clientX-rect.left)/rect.width*960;if(x<250)kingdomAction('wood');else if(x<475)kingdomAction('stone');else if(x<700)kingdomAction('food');else kingdomAction('home')}
-  return <div className="overlay top-overlay demo-overlay"><section className="demo-modal immersive-demo">
-    <header className="demo-top"><div><span className="eyebrow">{game.title} · {profile.genre} · PLAYABLE PREVIEW</span><h2>{profile.title}</h2></div><button className="icon-btn" onClick={onClose} type="button" aria-label="Close demo"><X/></button></header>
+  return <div className={`overlay top-overlay demo-overlay ${fullscreen ? 'demo-fullscreen' : ''}`} onMouseDown={event => { if (event.target === event.currentTarget && !fullscreen) onClose() }}><section ref={demoShellRef} className="demo-modal immersive-demo">
+    <header className="demo-top"><div><span className="eyebrow">{game.title} · {profile.genre} · PLAYABLE PREVIEW</span><h2>{profile.title}</h2></div><div className="demo-header-actions"><button className="icon-btn fullscreen-toggle" onClick={toggleFullscreen} type="button" aria-label={fullscreen ? 'Exit fullscreen' : 'Enter fullscreen'} title={fullscreen ? 'Exit fullscreen' : 'Fullscreen'}>{fullscreen ? <Minimize2/> : <Maximize2/>}</button><button className="icon-btn" onClick={async () => { if (document.fullscreenElement) { try { await document.exitFullscreen() } catch { /* ignore */ } } setFullscreen(false); onClose() }} type="button" aria-label="Close demo"><X/></button></div></header>
     <div className="demo-instructions"><div><b>MISSION</b><p>{profile.objective}</p></div><div><b>HOW TO PLAY</b><p>{profile.description}</p><small>{profile.controls}</small></div></div>
     <div className="immersive-stage"><canvas ref={canvasRef} onClick={canvasClick} aria-label={`${profile.title} game canvas`}/>
       {!started&&<div className="demo-start-cover"><span className="eyebrow">NEXORA ARCADE · DEMO BUILD</span><h3>Ready to enter?</h3><p>{profile.description}</p><button className="btn-primary" onClick={reset} type="button">START GAME <Play size={16}/></button></div>}

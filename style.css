@@ -428,3 +428,25 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .immersive-demo .demo-bottom .text-btn { color: #238653; }
 @media (pointer:coarse), (max-width:760px) { .demo-touch-pad { display: flex; } .immersive-demo { max-height: 96dvh; } .immersive-stage { height: clamp(250px, 43vh, 390px); } .demo-instructions { grid-template-columns: 1fr; gap: 7px; padding: 9px 0; } .demo-instructions>div { padding: 9px 11px; } .demo-instructions p { font-size: 11px; } .demo-hud-row { gap: 10px; flex-wrap: wrap; font-size: 9px; } .demo-live-status { width: 100%; text-align: left; margin: 0; } .kingdom-actions { grid-template-columns: 1fr 1fr; } }
 @media (max-width:420px) { .immersive-demo { padding: 11px; border-radius: 12px; } .demo-top .eyebrow { font-size: 7px; } .immersive-stage { min-height: 235px; } .demo-touch-pad button { min-width: 36px; } }
+
+
+/* Version 4.2 — reliable demo launch and fullscreen play */
+.demo-header-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.demo-header-actions .icon-btn { width: 40px; height: 40px; border-radius: 10px; background: #f1f7f2; border-color: #d6e5d9; color: #17683e; }
+.demo-header-actions .icon-btn svg { width: 18px; height: 18px; }
+.demo-fullscreen { position: fixed !important; inset: 0 !important; z-index: 2147483000 !important; display: flex !important; align-items: stretch !important; justify-content: stretch !important; padding: 0 !important; overflow: hidden !important; background: #07130d !important; }
+.demo-fullscreen .immersive-demo { width: 100vw !important; max-width: none !important; height: 100dvh !important; max-height: none !important; border: 0 !important; border-radius: 0 !important; padding: max(10px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left)) !important; display: flex !important; flex-direction: column !important; overflow: hidden !important; }
+.demo-fullscreen .demo-top { flex: 0 0 auto; }
+.demo-fullscreen .demo-instructions { flex: 0 0 auto; grid-template-columns: 1fr 1fr; padding: 8px 0; }
+.demo-fullscreen .demo-instructions>div { padding: 8px 11px; }
+.demo-fullscreen .immersive-stage { flex: 1 1 auto; height: auto !important; min-height: 120px !important; }
+.demo-fullscreen .demo-hud-row, .demo-fullscreen .demo-bottom { flex: 0 0 auto; }
+.demo-fullscreen .demo-touch-pad { flex: 0 0 auto; }
+@media (max-width: 600px) {
+  .demo-header-actions .icon-btn { width: 36px; height: 36px; }
+  .demo-fullscreen .demo-instructions { grid-template-columns: 1fr; max-height: 112px; overflow-y: auto; }
+  .demo-fullscreen .demo-instructions>div { padding: 6px 9px; }
+  .demo-fullscreen .demo-instructions p { font-size: 10px; }
+  .demo-fullscreen .demo-instructions small { font-size: 9px; margin-top: 3px; }
+  .demo-fullscreen .demo-bottom { font-size: 9px; }
+}
