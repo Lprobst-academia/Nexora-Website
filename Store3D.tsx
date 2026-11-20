@@ -45,7 +45,12 @@ function GameDisplay({ game, position, primary, onSelect }: { game: Game; positi
   const angle = Math.atan2(-position[0], -position[2])
   const group = useRef<THREE.Group>(null)
   const [hover, setHover] = useState(false)
-  return <group ref={group} position={position} rotation={[0, angle, 0]} onClick={onSelect} onPointerOver={() => setHover(true)} onPointerOut={() => setHover(false)}>
+  return <group ref={group} position={position} rotation={[0, angle, 0]} onClick={(event) => { event.stopPropagation(); onSelect() }} onPointerOver={() => setHover(true)} onPointerOut={() => setHover(false)}>
+    {/* A generous invisible hit target makes the display reliably tappable on touchscreens. */}
+    <mesh position={[0, .98, .17]}>
+      <planeGeometry args={[1.82, 1.92]} />
+      <meshBasicMaterial transparent opacity={0} depthWrite={false} side={THREE.DoubleSide} />
+    </mesh>
     <mesh position={[0, .14, 0]} castShadow receiveShadow>
       <cylinderGeometry args={[1.12, 1.2, .28, 32]} />
       <meshStandardMaterial color="#e9eee9" roughness={.62} />
@@ -154,7 +159,7 @@ function Player({ onNear, onSelect, spots, moveInput, lookInput, touchMode }: {
     if (!moved && desired.current.lengthSq() > 0) velocity.current.multiplyScalar(.25)
     camera.position.y = 1.7
     const nearest = spots.map(spot => ({ game: spot.g, distance: Math.hypot(camera.position.x - spot.p.x, camera.position.z - spot.p.z) }))
-      .filter(item => item.distance < 3.35).sort((a, b) => a.distance - b.distance)[0]?.game ?? null
+      .filter(item => item.distance < 3.8).sort((a, b) => a.distance - b.distance)[0]?.game ?? null
     if (nearest?.id !== nearRef.current?.id) { nearRef.current = nearest; onNear(nearest) }
   })
   return null
