@@ -10,6 +10,7 @@ type SavedStore = {
   storeName: string
   primary: string
   theme: string
+  schemaVersion?: number
 }
 
 function loadStore(): SavedStore | null {
@@ -26,13 +27,17 @@ export default function App() {
     typeof window === 'undefined' ? null : loadStore(),
   )
   const [page, setPage] = useState<'home' | 'store' | 'admin'>('home')
-  const [games, setGames] = useState<Game[]>(saved?.games?.length ? saved.games : initialGames)
+  const [games, setGames] = useState<Game[]>(
+    saved?.games?.length
+      ? saved.games.map(game => ({ ...game, demo: saved.schemaVersion ? game.demo : true }))
+      : initialGames,
+  )
   const [storeName, setStoreName] = useState(saved?.storeName ?? 'NEON ARCADE')
   const [primary, setPrimary] = useState(saved?.primary ?? '#238653')
   const [theme, setTheme] = useState(saved?.theme ?? 'minimal')
   const [selected, setSelected] = useState<Game | null>(null)
   const [checkout, setCheckout] = useState<Game | null>(null)
-  const [demo, setDemo] = useState(false)
+  const [demo, setDemo] = useState<Game | null>(null)
   const [entered, setEntered] = useState(false)
   const [touchMode, setTouchMode] = useState(false)
 
@@ -40,7 +45,7 @@ export default function App() {
     try {
       window.localStorage.setItem(
         'nexora-store-settings',
-        JSON.stringify({ games, storeName, primary, theme }),
+        JSON.stringify({ games, storeName, primary, theme, schemaVersion: 2 }),
       )
     } catch {
       // The demo remains usable if browser storage is unavailable.
@@ -151,11 +156,11 @@ export default function App() {
             game={selected}
             onClose={() => setSelected(null)}
             onBuy={() => { setCheckout(selected); setSelected(null) }}
-            onDemo={() => setDemo(true)}
+            onDemo={() => setDemo(selected)}
           />
         )}
         {checkout && <Checkout game={checkout} onClose={() => setCheckout(null)} onSuccess={() => setCheckout(null)} />}
-        {demo && <DemoGame onClose={() => setDemo(false)} />}
+        {demo && <DemoGame game={demo} onClose={() => setDemo(null)} />}
       </main>
     )
   }

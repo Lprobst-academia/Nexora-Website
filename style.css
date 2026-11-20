@@ -275,3 +275,64 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+
+
+/* Layer the WebGL showroom below all React dialogs. drei Html labels use their own
+   z-index range, so the canvas must form an isolated stacking context. */
+.store-page { isolation: isolate; }
+.store-canvas { z-index: 0; isolation: isolate; }
+.store-topbar, .store-controls, .store-bottom, .store-welcome, .interaction-hud, .touch-controls { z-index: 2; }
+.overlay { position: fixed; z-index: 10000; inset: 0; isolation: isolate; }
+.overlay .game-modal, .overlay .checkout-card, .overlay .demo-modal { position: relative; z-index: 1; }
+
+/* Keep dialogs usable on tablet and narrow phones, including iPad Safari. */
+.overlay { padding: max(10px, env(safe-area-inset-top)) 12px max(10px, env(safe-area-inset-bottom)); }
+.game-modal { width: min(1080px, 96vw); max-height: min(92dvh, 900px); }
+.game-hero { background-size: cover; background-position: center; }
+.game-hero h1, .game-desc, .tagline { overflow-wrap: anywhere; }
+.game-plaque { max-width: 120px; }
+.game-plaque img { object-fit: cover; }
+@media (max-width: 760px) {
+  .overlay { display: flex; align-items: center; justify-content: center; }
+  .game-modal, .checkout-card, .demo-modal { width: min(100%, 620px); max-height: calc(100dvh - 20px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); overflow-y: auto; overscroll-behavior: contain; }
+  .game-hero { min-height: 300px; padding: 28px 20px; }
+  .game-hero h1 { font-size: clamp(28px, 7vw, 42px); }
+  .modal-body { padding-left: 16px; padding-right: 16px; }
+  .info-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .info-grid > div { min-width: 0; overflow-wrap: anywhere; }
+  .hero-actions { flex-wrap: wrap; }
+  .hero-actions button { min-height: 44px; }
+}
+@media (max-width: 420px) {
+  .game-hero { min-height: 280px; }
+  .game-desc { font-size: 12px; line-height: 1.55; }
+  .info-grid { gap: 12px; }
+  .modal-footer { gap: 10px; flex-wrap: wrap; }
+}
+
+
+/* Green-and-white game detail dialog to match the refreshed store UI. */
+.game-modal { background: #fff; border-color: #dce9df; box-shadow: 0 28px 90px #102c1b40; }
+.game-hero { background-color: #15241b; }
+.game-hero .eyebrow { color: #e2eee5; }
+.game-hero h1 { color: #fff; }
+.game-hero .tagline { color: #a8e0b7; }
+.game-hero .game-desc { color: #edf4ef; }
+.modal-body { background: #fff; color: #1c2a21; }
+.tab-row { border-color: #e2ebe4; }
+.tab-row button { color: #68776c; }
+.tab-row button.active { color: #238653; border-color: #238653; }
+.info-grid > div { border-color: #e2ebe4; }
+.info-grid b { color: #1c2a21; }
+.field-label { color: #718075; }
+.modal-footer { border-color: #e2ebe4; }
+.modal-footer > span { color: #5d7062; }
+.modal-footer .text-btn { color: #287447; }
+.checkout-card, .demo-modal { background: #fff; color: #1c2a21; border-color: #dce9df; box-shadow: 0 24px 80px #102c1b35; }
+.checkout-card h2, .success-state h2, .demo-top h2 { color: #1c2a21; }
+.checkout-item, .order-ref { background: #f1f7f2; color: #1c2a21; }
+.checkout-item b, .checkout-line b { color: #1c2a21; }
+.checkout-item span, .checkout-line, .success-state p { color: #647268; }
+.checkout-total { color: #26382b; }
+.demo-bottom { color: #617366; }
+.demo-bottom .text-btn { color: #287447; }

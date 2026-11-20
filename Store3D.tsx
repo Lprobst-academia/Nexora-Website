@@ -98,7 +98,7 @@ function Display({
         <boxGeometry args={[1.25, 1.55, 0.12]} />
         <meshStandardMaterial color="#ffffff" metalness={0.08} roughness={0.45} />
       </mesh>
-      <Html position={[0, 1.25, 0.09]} transform distanceFactor={3.1} occlude>
+      <Html position={[0, 1.25, 0.09]} transform distanceFactor={3.1} occlude zIndexRange={[10, 0]}>
         <button
           className="game-plaque"
           style={{ borderColor: game.accent }}
@@ -295,7 +295,7 @@ export default function Store3D({
         <pointLight position={[0, 4, 0]} color={primary} intensity={1.2} distance={18} />
         <Suspense fallback={null}>
           <Floor primary={primary} />
-          <Html position={[0, 4.2, -12]} center>
+          <Html position={[0, 4.2, -12]} center zIndexRange={[10, 0]}>
             <div className="showroom-sign">
               <strong>{storeName || 'YOUR GAME STORE'}</strong>
               <span>DISCOVER YOUR NEXT WORLD</span>
