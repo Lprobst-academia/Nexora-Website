@@ -1,16 +1,11 @@
-NEXORA v4.5 — BUILD FIX + REMOVE JOYSTICK
+NEXORA v4.6 — TypeScript build fix
 
-Replace the existing root-level Store3D.tsx and style.css with these files.
-Keep nexora-mark.svg in the SAME directory as Store3D.tsx.
+Replace the root-level Store3D.tsx with the supplied Store3D.tsx.
+Keep nexora-mark.svg in the same root directory as Store3D.tsx.
 
-Fixes:
-- Imports useTexture from @react-three/drei (it was used but not imported).
-- Removes the undefined defaultLogo reference from the Store3D component signature.
-- Removes the visible virtual joystick and old D-pad.
-- iPad touch movement: drag in the LEFT area to walk.
-- iPad camera: drag in the RIGHT area to look around.
-- Keyboard movement remains WASD / arrows; E opens the nearby game.
+Why: App.tsx and Dashboard.tsx pass a `logo` prop to Store3D, but the
+Store3D Props type did not declare it. This update adds the optional prop.
+The logo geometry continues to use nexora-mark.svg.
 
-If GitHub Actions still fails, open Actions > failed run > build > expand
-'Build' and send the actual TypeScript/Vite error lines. The screenshot showing
-only the red failed check does not include the cause.
+The joystick remains removed. The touch zones remain drag-to-move on the
+left and drag-to-look on the right.

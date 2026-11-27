@@ -14,6 +14,7 @@ type Props = {
   theme: string
   onSelect: (game: Game) => void
   interactive?: boolean
+  logo?: string
 }
 type MoveInput = { forward: number; strafe: number }
 type LookInput = { x: number; y: number }
