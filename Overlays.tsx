@@ -186,13 +186,16 @@ export function DemoGame({ game, onClose }: { game: Game; onClose: () => void })
           if(now-e.moveAt>145){let dx=0,dy=0;if(held('ArrowLeft','KeyA'))dx=-1;else if(held('ArrowRight','KeyD'))dx=1;else if(held('ArrowUp','KeyW'))dy=-1;else if(held('ArrowDown','KeyS'))dy=1;if(dx||dy){const nx=e.player.x+dx,ny=e.player.y+dy;if(e.map[ny]?.[nx]===0){e.player={x:nx,y:ny};e.moveAt=now}}}
           if(e.kind==='stealth'){
             e.shards.forEach(s=>{if(!s.got&&s.x===e.player.x&&s.y===e.player.y){s.got=true;e.score+=250;e.status='Encrypted fragment recovered.'}})
-            e.guards.forEach(g=>{
-              if(now-e.patrolAt>550){
+            if(now-e.patrolAt>550){
+              e.guards.forEach(g=>{
                 const preferred=[{x:g.dx,y:g.dy},{x:-g.dy,y:g.dx},{x:g.dy,y:-g.dx},{x:-g.dx,y:-g.dy}];
                 const options=preferred.map(v=>({x:g.x+v.x,y:g.y+v.y,dx:v.x,dy:v.y})).filter(v=>e.map[v.y]?.[v.x]===0);
                 if(options.length){const next=options[0];g.x=next.x;g.y=next.y;g.dx=next.dx;g.dy=next.dy}
-                g.phase=(g.phase+1)%2;e.patrolAt=now;
-              }
+                g.phase=(g.phase+1)%2;
+              });
+              e.patrolAt=now;
+            }
+            e.guards.forEach(g=>{
               const distance=Math.hypot(g.x-e.player.x,g.y-e.player.y);
               const seesPlayer=distance<=3.6&&hasLineOfSight(e.map,g,e.player);
               if(seesPlayer&&now-e.caughtAt>1300){
