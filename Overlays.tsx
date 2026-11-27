@@ -102,6 +102,34 @@ function drawGame(ctx:CanvasRenderingContext2D,e:Engine,w:number,h:number) {
 function rotatePiece(piece:number[][]){return piece[0].map((_,i)=>piece.map(row=>row[i]).reverse())}
 function collides(board:number[][],piece:number[][],px:number,py:number){return piece.some((row,y)=>row.some((v,x)=>v&&(px+x<0||px+x>=10||py+y>=18||(py+y>=0&&board[py+y][px+x]))))}
 
+function hasLineOfSight(map:number[][],from:{x:number;y:number},to:{x:number;y:number}){
+  let x0=from.x,y0=from.y,x1=to.x,y1=to.y;
+  const dx=Math.abs(x1-x0),sx=x0<x1?1:-1,dy=-Math.abs(y1-y0),sy=y0<y1?1:-1;
+  let err=dx+dy;
+  while(x0!==x1||y0!==y1){
+    const twice=2*err;
+    if(twice>=dy){err+=dy;x0+=sx}
+    if(twice<=dx){err+=dx;y0+=sy}
+    if(x0===x1&&y0===y1)return true;
+    if(map[y0]?.[x0]!==0)return false;
+  }
+  return true;
+}
+
+function nextFloorStep(map:number[][],from:{x:number;y:number},to:{x:number;y:number}){
+  const queue=[{x:from.x,y:from.y,first:null as {x:number;y:number}|null}],seen=new Set([from.x+','+from.y]);
+  while(queue.length){
+    const node=queue.shift()!;
+    if(node.x===to.x&&node.y===to.y)return node.first;
+    for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
+      const x=node.x+dx,y=node.y+dy,key=x+','+y;
+      if(map[y]?.[x]!==0||seen.has(key))continue;
+      seen.add(key);queue.push({x,y,first:node.first??{x,y}});
+    }
+  }
+  return null;
+}
+
 export function DemoGame({ game, onClose }: { game: Game; onClose: () => void }) {
   const profile = profiles[game.id] ?? fallbackProfile
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -143,7 +171,15 @@ export function DemoGame({ game, onClose }: { game: Game; onClose: () => void })
         if(e.kind==='racing'){
           if(held('ArrowLeft','KeyA')&&now-(e.moveAt||0)>125){e.lane=Math.max(0,e.lane-1);e.moveAt=now}if(held('ArrowRight','KeyD')&&now-(e.moveAt||0)>125){e.lane=Math.min(2,e.lane+1);e.moveAt=now}
           if(held('Space')&&e.boost>0){e.boost=Math.max(0,e.boost-35*dt);e.distance+=95*dt}else{e.boost=Math.min(100,e.boost+12*dt);e.distance+=42*dt}
-          if(Math.random()<dt*.85)e.obstacles.push({lane:Math.floor(Math.random()*3),y:-35,type:Math.random()>.55?1:0});if(Math.random()<dt*.48)e.cells.push({lane:Math.floor(Math.random()*3),y:-25})
+          if(Math.random()<dt*.85){
+            const busy=new Set(e.obstacles.filter(o=>o.y<105).map(o=>o.lane));
+            const safeLanes=[0,1,2].filter(lane=>!busy.has(lane));
+            if(safeLanes.length){
+              const lane=safeLanes[Math.floor(Math.random()*safeLanes.length)];
+              e.obstacles.push({lane,y:-35,type:Math.random()>.55?1:0});
+            }
+          }
+          if(Math.random()<dt*.48)e.cells.push({lane:Math.floor(Math.random()*3),y:-25})
           e.obstacles.forEach(o=>o.y+=220*dt);e.cells.forEach(o=>o.y+=190*dt)
           e.obstacles=e.obstacles.filter(o=>{if(o.y>430&&o.y<495&&o.lane===e.lane){e.distance=Math.max(0,e.distance-100);e.status='Traffic hit — recover and keep driving';return false}return o.y<570})
           e.cells=e.cells.filter(o=>{if(o.y>420&&o.y<495&&o.lane===e.lane){e.boost=Math.min(100,e.boost+28);e.score+=100;return false}return o.y<570})
@@ -152,11 +188,34 @@ export function DemoGame({ game, onClose }: { game: Game; onClose: () => void })
           if(now-e.moveAt>145){let dx=0,dy=0;if(held('ArrowLeft','KeyA'))dx=-1;else if(held('ArrowRight','KeyD'))dx=1;else if(held('ArrowUp','KeyW'))dy=-1;else if(held('ArrowDown','KeyS'))dy=1;if(dx||dy){const nx=e.player.x+dx,ny=e.player.y+dy;if(e.map[ny]?.[nx]===0){e.player={x:nx,y:ny};e.moveAt=now}}}
           if(e.kind==='stealth'){
             e.shards.forEach(s=>{if(!s.got&&s.x===e.player.x&&s.y===e.player.y){s.got=true;e.score+=250;e.status='Encrypted fragment recovered.'}})
-            e.guards.forEach(g=>{if(now-e.patrolAt>550){g.phase=(g.phase+1)%2;const nx=g.x+g.dx,ny=g.y+g.dy;if(e.map[ny]?.[nx]===0){g.x=nx;g.y=ny}else{g.dx=-g.dx;g.dy=-g.dy}e.patrolAt=now}if(g.x===e.player.x&&g.y===e.player.y&&now-e.caughtAt>1300){e.caughtAt=now;e.lives--;e.player={x:1,y:1};e.status='Patrol spotted you. Returning to entry.';if(e.lives<=0){e.over=true;e.status='The security system locked the network.'}}})
+            if(now-e.patrolAt>550){
+              e.guards.forEach(g=>{
+                const preferred=[{x:g.dx,y:g.dy},{x:-g.dy,y:g.dx},{x:g.dy,y:-g.dx},{x:-g.dx,y:-g.dy}];
+                const options=preferred.map(v=>({x:g.x+v.x,y:g.y+v.y,dx:v.x,dy:v.y})).filter(v=>e.map[v.y]?.[v.x]===0);
+                if(options.length){const next=options[0];g.x=next.x;g.y=next.y;g.dx=next.dx;g.dy=next.dy}
+                g.phase=(g.phase+1)%2;
+              });
+              e.patrolAt=now;
+            }
+            e.guards.forEach(g=>{
+              const distance=Math.hypot(g.x-e.player.x,g.y-e.player.y);
+              const seesPlayer=distance<=3.6&&hasLineOfSight(e.map,g,e.player);
+              if(seesPlayer&&now-e.caughtAt>1300){
+                e.caughtAt=now;e.lives--;e.player={x:1,y:1};e.status='A patrol saw you. Your fragments are safe — try another route.';
+                if(e.lives<=0){e.over=true;e.status='The security system locked the network.'}
+              }
+            })
             if(e.shards.every(s=>s.got)&&e.player.x===10&&e.player.y===9){e.over=true;e.won=true;e.score+=500;e.status='Uplink secured. Clean extraction.'}
           }else{
             e.lanterns.forEach(l=>{if(!l.lit&&l.x===e.player.x&&l.y===e.player.y){l.lit=true;e.score+=150;e.status='A lantern comes back to life.'}})
-            if(now-e.patrolAt>900){const dx=Math.sign(e.player.x-e.mist.x),dy=Math.sign(e.player.y-e.mist.y);if(Math.random()>.5)e.mist.x+=dx;else e.mist.y+=dy;e.patrolAt=now;if(e.mist.x===e.player.x&&e.mist.y===e.player.y){e.lanterns.forEach(l=>l.lit=false);e.player={x:1,y:1};e.status='The mist caught your trail. Relight the path.'}}
+            if(now-e.patrolAt>900){
+              const step=nextFloorStep(e.map,e.mist,e.player);
+              if(step)e.mist={...e.mist,x:step.x,y:step.y};
+              e.patrolAt=now;
+              if(e.mist.x===e.player.x&&e.mist.y===e.player.y){
+                e.player={x:1,y:1};e.status='The mist found you. Your lit lanterns remain — take a different path.';
+              }
+            }
             if(e.lanterns.every(l=>l.lit)&&e.player.x===10&&e.player.y===9){e.over=true;e.won=true;e.score+=500;e.status='The garden gate opens. You made it.'}
           }
         } else if(e.kind==='kingdoms'){
@@ -166,7 +225,10 @@ export function DemoGame({ game, onClose }: { game: Game; onClose: () => void })
           const sp=245*dt;if(held('ArrowLeft','KeyA'))e.ship.x-=sp;if(held('ArrowRight','KeyD'))e.ship.x+=sp;if(held('ArrowUp','KeyW'))e.ship.y-=sp;if(held('ArrowDown','KeyS'))e.ship.y+=sp;if(justSpace&&e.dash<=0)e.dash=.45;if(e.dash>0)e.dash=Math.max(0,e.dash-dt);e.ship.x=THREECLAMP(e.ship.x,25,935);e.ship.y=THREECLAMP(e.ship.y,75,500)
           if(Math.random()<dt*.7)e.rocks.push({x:Math.random()*960,y:-25,vx:(Math.random()-.5)*60,vy:90+Math.random()*100,r:12+Math.random()*16});e.rocks.forEach(r=>{r.x+=r.vx*dt;r.y+=r.vy*dt});e.rocks=e.rocks.filter(r=>r.y<570)
           e.cores.forEach(core=>{if(!core.got&&Math.hypot(core.x-e.ship.x,core.y-e.ship.y)<28){core.got=true;e.score+=100;e.status='Energy core recovered.'}})
-          if(e.dash<=0&&e.rocks.some(r=>Math.hypot(r.x-e.ship.x,r.y-e.ship.y)<r.r+15)){e.ship.x=480;e.ship.y=390;e.status='Hull impact — stabilising flight.';e.score=Math.max(0,e.score-25)}
+          if(e.dash<=0&&now-(e.caughtAt||0)>1100&&e.rocks.some(r=>Math.hypot(r.x-e.ship.x,r.y-e.ship.y)<r.r+15)){
+            e.caughtAt=now;e.ship.x=THREECLAMP(e.ship.x-35,25,935);e.ship.y=THREECLAMP(e.ship.y+25,75,500);
+            e.status='Hull impact — brief stabilisation. Keep piloting.';e.score=Math.max(0,e.score-25)
+          }
           if(e.cores.every(c=>c.got)){e.over=true;e.won=true;e.status='All salvage cores recovered.'}
         } else if(e.kind==='pixel'){
           if(now-e.dropAt>550){e.py++;e.dropAt=now}

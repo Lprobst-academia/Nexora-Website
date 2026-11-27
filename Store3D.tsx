@@ -189,11 +189,17 @@ function Player({ onNear, onSelect, spots, moveInput, lookInput, touchMode }: {
   const forward = useRef(new THREE.Vector3())
   const right = useRef(new THREE.Vector3())
   const nearRef = useRef<Game | null>(null)
+  const cameraInitialized = useRef(false)
 
   useEffect(() => {
-    camera.position.set(0, 1.7, 0.7)
-    camera.rotation.set(0, 0, 0)
-    camera.rotation.order = 'YXZ'
+    // Canvas already supplies the spawn position. Only initialize the view once;
+    // remounting keyboard handlers must never snap a player back to the entrance.
+    if (!cameraInitialized.current) {
+      camera.position.set(0, 1.7, 0.7)
+      camera.rotation.set(0, 0, 0)
+      camera.rotation.order = 'YXZ'
+      cameraInitialized.current = true
+    }
     const down = (event: KeyboardEvent) => {
       if (['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.code)) keys.current[event.code] = true
       if (event.code === 'KeyE' && nearRef.current) {
