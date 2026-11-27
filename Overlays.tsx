@@ -174,8 +174,10 @@ export function DemoGame({ game, onClose }: { game: Game; onClose: () => void })
           if(Math.random()<dt*.85){
             const busy=new Set(e.obstacles.filter(o=>o.y<105).map(o=>o.lane));
             const safeLanes=[0,1,2].filter(lane=>!busy.has(lane));
-            const lane=safeLanes[Math.floor(Math.random()*Math.max(1,safeLanes.length))]??1;
-            e.obstacles.push({lane,y:-35,type:Math.random()>.55?1:0});
+            if(safeLanes.length){
+              const lane=safeLanes[Math.floor(Math.random()*safeLanes.length)];
+              e.obstacles.push({lane,y:-35,type:Math.random()>.55?1:0});
+            }
           }
           if(Math.random()<dt*.48)e.cells.push({lane:Math.floor(Math.random()*3),y:-25})
           e.obstacles.forEach(o=>o.y+=220*dt);e.cells.forEach(o=>o.y+=190*dt)
