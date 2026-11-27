@@ -588,3 +588,24 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
     box-shadow:0 4px 18px rgba(20,60,30,.08);
   }
 }
+
+
+/* NEXORA v4.7 — full-screen iPad drag controls with UI kept clickable */
+.store-canvas { touch-action: none; }
+.store-canvas canvas { touch-action: none !important; }
+.touch-fullscreen-hint {
+  position:absolute; left:50%; bottom:max(14px, env(safe-area-inset-bottom));
+  transform:translateX(-50%); z-index:4; pointer-events:none;
+  padding:7px 11px; border:1px solid #cfe2d2; border-radius:999px;
+  color:#416a4d; background:rgba(255,255,255,.76);
+  font:700 8px var(--mono); letter-spacing:.08em; white-space:nowrap;
+  box-shadow:0 4px 18px rgba(20,60,30,.08);
+}
+/* HUD and navigation sit above the 3D canvas; only their actual controls receive taps. */
+.store-topbar, .store-controls, .store-bottom, .interaction-hud { position:absolute; z-index:8; }
+.interaction-hud { pointer-events:none; }
+.interaction-hud .near-card, .interaction-hud button { pointer-events:auto; }
+@media (pointer:coarse) {
+  .touch-controls, .touch-move-zone, .touch-look-zone, .touch-joystick { display:none !important; }
+  .touch-fullscreen-hint { display:block; }
+}

@@ -1,11 +1,15 @@
-NEXORA v4.6 — TypeScript build fix
+NEXORA v4.7 — FULL-SCREEN IPAD DRAG CONTROLS
 
-Replace the root-level Store3D.tsx with the supplied Store3D.tsx.
-Keep nexora-mark.svg in the same root directory as Store3D.tsx.
+Replace these two files in the ROOT of your existing GitHub repository:
+- Store3D.tsx
+- style.css
 
-Why: App.tsx and Dashboard.tsx pass a `logo` prop to Store3D, but the
-Store3D Props type did not declare it. This update adds the optional prop.
-The logo geometry continues to use nexora-mark.svg.
+What changed:
+- Touch movement now starts anywhere on the showroom, not only in separate left/right zones.
+- Drag left/right to turn the camera.
+- Drag up/down to walk forward/backward.
+- The old joystick and split touch zones are removed from the rendered UI.
+- Buttons, links, game interaction prompt, and navigation controls are excluded from drag handling and remain clickable above the 3D scene.
+- Desktop WASD, mouse look, and E interaction remain unchanged.
 
-The joystick remains removed. The touch zones remain drag-to-move on the
-left and drag-to-look on the right.
+Do not replace package.json or the GitHub Actions workflow.

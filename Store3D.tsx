@@ -239,57 +239,6 @@ function Player({ onNear, onSelect, spots, moveInput, lookInput, touchMode }: {
   return null
 }
 
-function TouchControls({ moveInput, lookInput }: { moveInput: MutableRefObject<MoveInput>; lookInput: MutableRefObject<LookInput> }) {
-  const moveLast = useRef<{ x: number; y: number } | null>(null)
-  const lookLast = useRef<{ x: number; y: number } | null>(null)
-
-  const startMove = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (event.pointerType === 'mouse') return
-    event.preventDefault()
-    moveLast.current = { x: event.clientX, y: event.clientY }
-    event.currentTarget.setPointerCapture(event.pointerId)
-    moveInput.current = { forward: 0, strafe: 0 }
-  }
-  const movePlayer = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (!moveLast.current || event.pointerType === 'mouse') return
-    const dx = event.clientX - moveLast.current.x
-    const dy = event.clientY - moveLast.current.y
-    // Swipe direction controls walking; speed is capped for predictable iPad movement.
-    const scale = 0.085
-    moveInput.current = {
-      forward: THREE.MathUtils.clamp(-dy * scale, -1, 1),
-      strafe: THREE.MathUtils.clamp(dx * scale, -1, 1),
-    }
-    moveLast.current = { x: event.clientX, y: event.clientY }
-  }
-  const stopMove = () => {
-    moveLast.current = null
-    moveInput.current = { forward: 0, strafe: 0 }
-  }
-
-  const startLook = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (event.pointerType === 'mouse') return
-    event.preventDefault()
-    lookLast.current = { x: event.clientX, y: event.clientY }
-    event.currentTarget.setPointerCapture(event.pointerId)
-  }
-  const moveLook = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (!lookLast.current || event.pointerType === 'mouse') return
-    lookInput.current.x += (event.clientX - lookLast.current.x) * 1.15
-    lookInput.current.y += (event.clientY - lookLast.current.y) * 1.15
-    lookLast.current = { x: event.clientX, y: event.clientY }
-  }
-  const endLook = () => { lookLast.current = null }
-
-  return <div className="touch-controls" aria-label="Touch showroom controls">
-    <div className="touch-move-zone" onPointerDown={startMove} onPointerMove={movePlayer} onPointerUp={stopMove} onPointerCancel={stopMove} onLostPointerCapture={stopMove}>
-      <span>DRAG TO MOVE</span>
-    </div>
-    <div className="touch-look-zone" onPointerDown={startLook} onPointerMove={moveLook} onPointerUp={endLook} onPointerCancel={endLook} onLostPointerCapture={endLook}>
-      <span>DRAG TO LOOK</span>
-    </div>
-  </div>
-}
 
 export default function Store3D({ games, storeName, primary, theme, onSelect, interactive = true }: Props) {
   const spots = useMemo(() => games.map((game, index) => ({ p: new THREE.Vector3(...positionFor(index, games.length)), g: game })), [games])
@@ -297,6 +246,35 @@ export default function Store3D({ games, storeName, primary, theme, onSelect, in
   const [touchMode, setTouchMode] = useState(false)
   const moveInput = useRef<MoveInput>({ forward: 0, strafe: 0 })
   const lookInput = useRef<LookInput>({ x: 0, y: 0 })
+  const activeTouch = useRef<number | null>(null)
+  const lastTouch = useRef<{ x: number; y: number } | null>(null)
+
+  // One-finger, full-screen iPad control: horizontal drag turns the camera;
+  // vertical drag walks forward/back. Interactive UI elements are excluded.
+  const onTouchPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (event.pointerType === 'mouse' || !touchMode) return
+    const target = event.target
+    if (target instanceof Element && target.closest('button,a,input,textarea,select,[role="button"],.near-card,.store-topbar,.store-controls,.store-bottom,.store-welcome')) return
+    activeTouch.current = event.pointerId
+    lastTouch.current = { x: event.clientX, y: event.clientY }
+    moveInput.current = { forward: 0, strafe: 0 }
+  }
+  const onTouchPointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (activeTouch.current !== event.pointerId || !lastTouch.current) return
+    const dx = event.clientX - lastTouch.current.x
+    const dy = event.clientY - lastTouch.current.y
+    // Turning follows horizontal finger movement; vertical swipes walk.
+    lookInput.current.x += dx * 1.05
+    moveInput.current = { forward: THREE.MathUtils.clamp(-dy * 0.028, -1, 1), strafe: 0 }
+    lastTouch.current = { x: event.clientX, y: event.clientY }
+    event.preventDefault()
+  }
+  const onTouchPointerUp = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (activeTouch.current !== event.pointerId) return
+    activeTouch.current = null
+    lastTouch.current = null
+    moveInput.current = { forward: 0, strafe: 0 }
+  }
   useEffect(() => {
     const query = window.matchMedia('(pointer: coarse)')
     const update = () => setTouchMode(query.matches || navigator.maxTouchPoints > 0)
@@ -304,7 +282,7 @@ export default function Store3D({ games, storeName, primary, theme, onSelect, in
     return () => query.removeEventListener?.('change', update)
   }, [])
   const dark = theme === 'dark'
-  return <div className={`store-canvas ${touchMode ? 'touch-enabled' : ''}`}>
+  return <div className={`store-canvas ${touchMode ? 'touch-enabled' : ''}`} onPointerDown={onTouchPointerDown} onPointerMove={onTouchPointerMove} onPointerUp={onTouchPointerUp} onPointerCancel={onTouchPointerUp}>
     <Canvas shadows={!touchMode} camera={{ position: [0, 1.7, .7], fov: touchMode ? 76 : 70 }} dpr={touchMode ? [1, 1.25] : [1, 1.5]} gl={{ antialias: !touchMode, alpha: false, powerPreference: 'high-performance' }} style={{ touchAction: 'none' }}>
       <color attach="background" args={[dark ? '#eaf1eb' : '#f1f7f2']} />
       <fog attach="fog" args={['#f1f7f2', 22, 36]} />
@@ -327,7 +305,7 @@ export default function Store3D({ games, storeName, primary, theme, onSelect, in
     </Canvas>
     {interactive && <>
       <div className="interaction-hud">{near ? <div className="near-card"><span className="keycap">{touchMode ? 'TAP' : 'E'}</span><span>{touchMode ? 'TAP TO OPEN' : 'PRESS E TO OPEN'} <b>{near.title}</b></span><button onClick={() => onSelect(near)} type="button">OPEN ↗</button></div> : !touchMode ? <div className="aim-dot" /> : null}</div>
-      {touchMode && <TouchControls moveInput={moveInput} lookInput={lookInput} />}
+      {touchMode && <div className="touch-fullscreen-hint" aria-hidden="true">DRAG ANYWHERE · UP/DOWN TO WALK · LEFT/RIGHT TO TURN</div>}
     </>}
   </div>
 }
