@@ -1,15 +1,11 @@
-NEXORA v4.7 — FULL-SCREEN IPAD DRAG CONTROLS
+NEXORA v4.8 — iPad look up/down
 
-Replace these two files in the ROOT of your existing GitHub repository:
-- Store3D.tsx
-- style.css
+Replace Store3D.tsx in the repository root with the Store3D.tsx in this ZIP.
 
-What changed:
-- Touch movement now starts anywhere on the showroom, not only in separate left/right zones.
-- Drag left/right to turn the camera.
-- Drag up/down to walk forward/backward.
-- The old joystick and split touch zones are removed from the rendered UI.
-- Buttons, links, game interaction prompt, and navigation controls are excluded from drag handling and remain clickable above the 3D scene.
-- Desktop WASD, mouse look, and E interaction remain unchanged.
+On iPad:
+- Drag left/right to turn.
+- Drag down to look toward the floor; drag up to look toward the ceiling.
+- Vertical dragging also continues to move forward/backward.
+- Buttons and game displays remain excluded from drag handling so they can still be tapped.
 
-Do not replace package.json or the GitHub Actions workflow.
+Desktop controls remain WASD + mouse look, with E to open a nearby game.

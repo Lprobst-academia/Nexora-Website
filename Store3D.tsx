@@ -211,7 +211,7 @@ function Player({ onNear, onSelect, spots, moveInput, lookInput, touchMode }: {
     const dt = Math.min(delta, .035)
     if (touchMode) {
       camera.rotation.y -= lookInput.current.x * .0024
-      camera.rotation.x = THREE.MathUtils.clamp(camera.rotation.x - lookInput.current.y * .0024, -1.05, 1.05)
+      camera.rotation.x = THREE.MathUtils.clamp(camera.rotation.x - lookInput.current.y * .0024, -1.30, 1.30)
       lookInput.current.x = 0
       lookInput.current.y = 0
     }
@@ -250,12 +250,13 @@ export default function Store3D({ games, storeName, primary, theme, onSelect, in
   const lastTouch = useRef<{ x: number; y: number } | null>(null)
 
   // One-finger, full-screen iPad control: horizontal drag turns the camera;
-  // vertical drag walks forward/back. Interactive UI elements are excluded.
+  // vertical drag looks up/down and also walks forward/back. UI controls are excluded. Interactive UI elements are excluded.
   const onTouchPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
     if (event.pointerType === 'mouse' || !touchMode) return
     const target = event.target
     if (target instanceof Element && target.closest('button,a,input,textarea,select,[role="button"],.near-card,.store-topbar,.store-controls,.store-bottom,.store-welcome')) return
     activeTouch.current = event.pointerId
+    try { event.currentTarget.setPointerCapture(event.pointerId) } catch { /* Safari may already own the pointer */ }
     lastTouch.current = { x: event.clientX, y: event.clientY }
     moveInput.current = { forward: 0, strafe: 0 }
   }
@@ -265,12 +266,16 @@ export default function Store3D({ games, storeName, primary, theme, onSelect, in
     const dy = event.clientY - lastTouch.current.y
     // Turning follows horizontal finger movement; vertical swipes walk.
     lookInput.current.x += dx * 1.05
+    // Vertical finger movement now controls camera pitch as well as walking.
+    // Drag down looks toward the floor; drag up looks toward the ceiling.
+    lookInput.current.y += dy * 1.05
     moveInput.current = { forward: THREE.MathUtils.clamp(-dy * 0.028, -1, 1), strafe: 0 }
     lastTouch.current = { x: event.clientX, y: event.clientY }
     event.preventDefault()
   }
   const onTouchPointerUp = (event: ReactPointerEvent<HTMLDivElement>) => {
     if (activeTouch.current !== event.pointerId) return
+    try { event.currentTarget.releasePointerCapture(event.pointerId) } catch { /* capture may already be released */ }
     activeTouch.current = null
     lastTouch.current = null
     moveInput.current = { forward: 0, strafe: 0 }
